@@ -2,18 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddHttpLogging(_ => {});
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseHttpLogging();
-
-if (app.Environment.IsDevelopment())
-{
-}
-
-app.UseHttpsRedirection();
 
 app.MapGet("/healthcheck",
     (HttpContext context) => new HealthCheckResponse("1.0.0", DateTime.UtcNow, context.Request.Host.Port));
