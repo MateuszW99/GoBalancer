@@ -2,40 +2,22 @@ package main
 
 import (
 	"fmt"
+	"github.com/MateuszW99/GoBalancer/internal/config"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"github.com/MateuszW99/GoBalancer/internal/strategy"
 	"log"
 	"net/http"
-	"time"
 )
 
-var servers = []server.Server{
-	{
-		ID:              "1",
-		Name:            "Server 2137",
-		Protocol:        "http",
-		Host:            "localhost",
-		Port:            2137,
-		Url:             "http://localhost:2137",
-		IsHealthy:       true,
-		LastHealthCheck: time.Now(),
-	},
-	{
-		ID:              "2",
-		Name:            "Server 21370",
-		Protocol:        "http",
-		Host:            "localhost",
-		Port:            21370,
-		Url:             "http://localhost:21370",
-		IsHealthy:       true,
-		LastHealthCheck: time.Now(),
-	},
-}
-
 func main() {
+	servers, err := config.LoadServersFromFile("servers.json")
+	if err != nil {
+		log.Fatalf("failed to load server config: %v", err)
+	}
+
 	pool := server.NewServerPool()
-	for _, srv := range servers {
-		pool.AddServer(&srv)
+	for i := range servers {
+		pool.AddServer(&servers[i])
 	}
 
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
@@ -48,7 +30,6 @@ func main() {
 func distributeLoad(port int, loadBalancer strategy.LoadBalancer, pool *server.ServerPool) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
-	//mux.HandleFunc("/loadbalancer/get-all-servers")
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
