@@ -22,11 +22,11 @@ var servers = []server.Server{
 	},
 	{
 		ID:              "2",
-		Name:            "Server 2138",
+		Name:            "Server 21370",
 		Protocol:        "http",
 		Host:            "localhost",
-		Port:            2138,
-		Url:             "http://localhost:2138",
+		Port:            21370,
+		Url:             "http://localhost:21370",
 		IsHealthy:       true,
 		LastHealthCheck: time.Now(),
 	},
@@ -58,6 +58,6 @@ func distributeLoad(port int, loadBalancer strategy.LoadBalancer, pool *server.S
 	log.Printf("starting load balancer on port %d", port)
 
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("load balancer on por t%d failed: %v", port, err)
+		log.Fatalf("load balancer on port %d failed: %v", port, err)
 	}
 }
