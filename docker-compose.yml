@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  myapp:
+  testapi:
     build:
       context: ./testApi/Api 
       dockerfile: Dockerfile
@@ -10,3 +10,18 @@ services:
       - "${PORT2:-21370}:${PORT2:-21370}"
     environment:
       - APP_PORTS=${PORT1:-2137};${PORT2:-21370}
+    networks:
+      - net
+
+  gobalancer:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - testapi
+    networks:
+      - net
+
+networks:
+  net:
