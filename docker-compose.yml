@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  myapp:
+    build:
+      context: ./testApi/Api 
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT1:-2137}:${PORT1:-2137}"
+      - "${PORT2:-21370}:${PORT2:-21370}"
+    environment:
+      - APP_PORTS=${PORT1:-2137};${PORT2:-21370}

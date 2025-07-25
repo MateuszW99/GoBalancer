@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -13,10 +15,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/healthcheck", () => new HealthCheckResponse("1.0.0", DateTime.UtcNow));
+app.MapGet("/healthcheck",
+    (HttpContext context) => new HealthCheckResponse("1.0.0", DateTime.UtcNow, context.Request.Host.Port));
 
-app.MapGet("/hello-world", () => new { Message = "Hello, World!" });
+app.MapPost("/test-endpoint", ([FromBody] TestEndpointRequest request, HttpContext context) =>
+        Results.Json(new TestEndpointResponse(context.Request.Host.Port), statusCode: request.RequestedResponseCode));
+
+var ports = Environment.GetEnvironmentVariable("APP_PORTS")?.Split(';') ?? [];
+foreach (var port in ports)
+    app.Urls.Add($"http://+:{port}");
 
 app.Run();
 
-record HealthCheckResponse(string Version, DateTime CurrentDate);
+sealed record HealthCheckResponse(string Version, DateTime CurrentDate, int? Port) : ApiBaseResponse(Port);
+
+sealed record TestEndpointRequest(int RequestedResponseCode);
+
+sealed record TestEndpointResponse(int? Port) : ApiBaseResponse(Port);
+
+record ApiBaseResponse(int? Port);
