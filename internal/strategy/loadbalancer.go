@@ -32,8 +32,7 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal nextServer error", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("Calling nextServer %v", nextServer.Name)
+	log.Printf("Calling next server %v", nextServer.Name)
 
 	targetURL, err := url.Parse(nextServer.Url)
 	if err != nil {
@@ -67,11 +66,13 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 	res, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "failed to reach backend nextServer", http.StatusBadGateway)
+		return
 	}
 
 	byteResp, err := io.ReadAll(res.Body)
 	if err != nil {
 		http.Error(w, "failed to read response body", http.StatusInternalServerError)
+		return
 	}
 
 	defer res.Body.Close()
