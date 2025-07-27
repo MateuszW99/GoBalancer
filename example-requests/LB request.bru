@@ -1,0 +1,21 @@
+meta {
+  name: LB request
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/test-endpoint
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "requestedResponseCode": 200
+  }
+}
+
+settings {
+  encodeUrl: true
+}
