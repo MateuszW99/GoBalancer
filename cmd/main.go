@@ -12,11 +12,15 @@ import (
 
 func main() {
 	port := flag.Int("port", 3000, "Port to listen on")
+	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
 	flag.Parse()
 
-	servers, err := config.LoadServersFromFile("servers.json")
+	servers, err := config.LoadServersFromFile(*serverConfig)
 	if err != nil {
 		log.Fatalf("failed to load server config: %v", err)
+	}
+	if len(servers) == 0 {
+		log.Fatalf("no servers found in %v", *serverConfig)
 	}
 
 	pool := server.NewServerPool()

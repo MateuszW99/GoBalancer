@@ -13,6 +13,5 @@ FROM gcr.io/distroless/static
 
 WORKDIR /
 COPY --from=builder /gobalancer .
-COPY servers.json ./servers.json
 
 ENTRYPOINT ["/gobalancer"]
