@@ -17,7 +17,8 @@ services:
     build:
       context: .
     ports:
-      - "3000:3000"
+      - "300:3000"
+    command: ["--port=3000"]
     depends_on:
       - testapi
     networks:

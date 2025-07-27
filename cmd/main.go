@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/MateuszW99/GoBalancer/internal/config"
 	"github.com/MateuszW99/GoBalancer/internal/server"
@@ -10,6 +11,9 @@ import (
 )
 
 func main() {
+	port := flag.Int("port", 3000, "Port to listen on")
+	flag.Parse()
+
 	servers, err := config.LoadServersFromFile("servers.json")
 	if err != nil {
 		log.Fatalf("failed to load server config: %v", err)
@@ -22,7 +26,7 @@ func main() {
 
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
 	loadBalancer := strategy.NewLoadBalancer(roundRobin)
-	distributeLoad(3000, loadBalancer, pool)
+	distributeLoad(*port, loadBalancer, pool)
 
 	select {}
 }
