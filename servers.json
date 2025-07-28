@@ -5,7 +5,8 @@
     "protocol": "http",
     "host": "localhost",
     "port": 2137,
-    "url": "http://testapi:2137",
+    "url": "http://localhost:2137",
+    "healthcheckUrl": "/healthcheck",
     "isHealthy": true
   },
   {
@@ -14,7 +15,8 @@
     "protocol": "http",
     "host": "localhost",
     "port": 21370,
-    "url": "http://testapi:21370",
+    "url": "http://localhost:21370",
+    "healthcheckUrl": "/healthcheck",
     "isHealthy": true
   }
 ]

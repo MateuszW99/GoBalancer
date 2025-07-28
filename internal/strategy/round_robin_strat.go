@@ -20,17 +20,14 @@ func NewRoundRobinLoadBalancer(serverPool *server.ServerPool) *RoundRobinLoadBal
 }
 
 func (lb *RoundRobinLoadBalancer) GetNextServer() (*server.Server, error) {
-	servers := lb.serverPool.GetAllServers()
+	servers := server.GetHealthyServers(lb.serverPool)
 
 	if len(servers) == 0 {
-		return nil, errors.New("no servers found")
+		return nil, errors.New("no healthy servers available")
 	}
 
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
-
 	lb.lastServerIndex = (lb.lastServerIndex + 1) % len(servers)
-
-	selectedServer := servers[lb.lastServerIndex]
-	return selectedServer, nil
+	return servers[lb.lastServerIndex], nil
 }

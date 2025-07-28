@@ -1,6 +1,9 @@
 package server
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Server struct {
 	ID              string
@@ -11,6 +14,8 @@ type Server struct {
 	Url             string
 	IsHealthy       bool
 	LastHealthCheck time.Time
+	HealthcheckUrl  string
+	mu              sync.RWMutex
 }
 
 type ServerPool struct {

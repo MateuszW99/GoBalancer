@@ -22,7 +22,8 @@ services:
     volumes:
       - ./cmd/servers-container.json:/servers-container.json
     depends_on:
-      - testapi
+      testapi:
+        condition: service_started
     networks:
       - net
 

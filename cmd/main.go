@@ -8,6 +8,7 @@ import (
 	"github.com/MateuszW99/GoBalancer/internal/strategy"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -30,6 +31,7 @@ func main() {
 
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
 	loadBalancer := strategy.NewLoadBalancer(roundRobin)
+	server.StartHealthChecking(pool, 5*time.Second)
 	distributeLoad(*port, loadBalancer, pool)
 
 	select {}
@@ -39,14 +41,14 @@ func distributeLoad(port int, loadBalancer strategy.LoadBalancer, pool *server.S
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 
-	server := &http.Server{
+	trafficDistributor := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 
 	log.Printf("starting load balancer on port %d", port)
 
-	if err := server.ListenAndServe(); err != nil {
+	if err := trafficDistributor.ListenAndServe(); err != nil {
 		log.Fatalf("load balancer on port %d failed: %v", port, err)
 	}
 }
