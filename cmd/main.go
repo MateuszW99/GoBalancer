@@ -26,19 +26,18 @@ func main() {
 
 	pool := server.NewServerPool()
 	for i := range servers {
-		pool.AddServer(&servers[i])
+		_ = pool.AddServer(&servers[i])
 	}
-	a := 1
-	a += 1
+
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
 	loadBalancer := strategy.NewLoadBalancer(roundRobin)
 	server.StartHealthChecking(pool, 5*time.Second)
-	distributeLoad(*port, loadBalancer, pool)
+	distributeLoad(*port, loadBalancer)
 
 	select {}
 }
 
-func distributeLoad(port int, loadBalancer strategy.LoadBalancer, pool *server.ServerPool) {
+func distributeLoad(port int, loadBalancer strategy.LoadBalancer) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 
