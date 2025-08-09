@@ -3,20 +3,16 @@
     "id": "1",
     "name": "Server 2137",
     "protocol": "http",
-    "host": "localhost",
+    "host": "testapi",
     "port": 2137,
-    "url": "http://testapi:2137",
-    "healthcheckUrl": "/healthcheck",
-    "isHealthy": true
+    "healthcheckUrl": "/healthcheck"
   },
   {
     "id": "2",
     "name": "Server 21370",
     "protocol": "http",
-    "host": "localhost",
+    "host": "testapi",
     "port": 21370,
-    "url": "http://testapi:21370",
-    "healthcheckUrl": "/healthcheck",
-    "isHealthy": true
+    "healthcheckUrl": "/healthcheck"
   }
 ]

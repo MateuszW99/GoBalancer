@@ -26,7 +26,7 @@ func main() {
 
 	pool := server.NewServerPool()
 	for i := range servers {
-		_ = pool.AddServer(&servers[i])
+		_ = pool.AddServer(servers[i])
 	}
 
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
