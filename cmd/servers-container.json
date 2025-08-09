@@ -1,18 +1,26 @@
-[
-  {
-    "id": "1",
-    "name": "Server 2137",
-    "protocol": "http",
-    "host": "testapi",
-    "port": 2137,
-    "healthcheckUrl": "/healthcheck"
-  },
-  {
-    "id": "2",
-    "name": "Server 21370",
-    "protocol": "http",
-    "host": "testapi",
-    "port": 21370,
-    "healthcheckUrl": "/healthcheck"
-  }
-]
+{
+  "serverPools": [
+    {
+      "name": "serverPool1",
+      "strategy": "rb",
+      "servers": [
+        {
+          "id": "1",
+          "name": "Server 2137",
+          "protocol": "http",
+          "host": "testapi",
+          "port": 2137,
+          "healthcheckUrl": "/healthcheck"
+        },
+        {
+          "id": "2",
+          "name": "Server 21370",
+          "protocol": "http",
+          "host": "testapi",
+          "port": 21370,
+          "healthcheckUrl": "/healthcheck"
+        }
+      ]
+    }
+  ]
+}

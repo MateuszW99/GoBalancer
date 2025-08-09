@@ -16,19 +16,15 @@ func main() {
 	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
 	flag.Parse()
 
-	servers, err := config.LoadServersFromFile(*serverConfig)
+	serverPools, err := config.LoadServersFromFile(*serverConfig)
 	if err != nil {
 		log.Fatalf("failed to load server config: %v", err)
 	}
-	if len(servers) == 0 {
+	if len(serverPools) == 0 {
 		log.Fatalf("no servers found in %v", *serverConfig)
 	}
 
-	pool := server.NewServerPool()
-	for i := range servers {
-		_ = pool.AddServer(servers[i])
-	}
-
+	pool := serverPools[0] // TODO: run all pools concurrently
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
 	loadBalancer := strategy.NewLoadBalancer(roundRobin)
 	server.StartHealthChecking(pool, 5*time.Second)

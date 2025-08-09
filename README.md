@@ -44,17 +44,25 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 GoBalancer reads its backend server list from a JSON file like this:
 
 ```json
-[
-  {
-    "ID": "1",
-    "Name": "Server 1",
-    "Protocol": "http",
-    "Host": "testapi",
-    "Port": 2137,
-    "Url": "http://localhost:2137",
-    "HealthcheckUrl": "/healthcheck"
-  }
-]
+{
+  "serverPools": [
+    {
+      "name": "serverPool1",
+      "strategy": "rb",
+      "servers": [
+        {
+          "id": "1",
+          "name": "Server 2137",
+          "protocol": "http",
+          "host": "localhost",
+          "port": 2137,
+          "healthcheckUrl": "/healthcheck"
+        }
+      ]
+    }
+  ]
+}
+
 ```
 
 ## 🤖 Linting

@@ -19,11 +19,14 @@ type Server struct {
 }
 
 type ServerPool struct {
-	Servers []*Server
+	Name     string
+	Strategy string
+	Servers  []*Server
 }
 
-func NewServerPool() *ServerPool {
+func NewServerPool(name string) *ServerPool {
 	return &ServerPool{
+		Name:    name,
 		Servers: make([]*Server, 0),
 	}
 }

@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+type LoadBalancerConfig struct {
+	ServerPools []ServerPoolConfig `json:"serverPools"`
+}
+
+type ServerPoolConfig struct {
+	Name     string         `json:"name"`
+	Strategy string         `json:"strategy"`
+	Servers  []ServerConfig `json:"servers"`
+}
+
 type ServerConfig struct {
 	ID             string `json:"id"`
 	Name           string `json:"name"`
@@ -17,30 +27,31 @@ type ServerConfig struct {
 	HealthcheckUrl string `json:"healthcheckUrl"`
 }
 
-func LoadServersFromFile(path string) ([]*server.Server, error) {
-	file, err := os.Open(path)
+func LoadServersFromFile(path string) ([]*server.ServerPool, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(file)
-
-	var serverConfigs []ServerConfig
-	if err := json.NewDecoder(file).Decode(&serverConfigs); err != nil {
-		return nil, err
+	var cfg LoadBalancerConfig
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse config JSON %w", err)
 	}
 
-	servers := make([]*server.Server, 0, len(serverConfigs))
-	for _, cfg := range serverConfigs {
-		servers = append(servers, newServerFromConfig(cfg))
+	var serverPools []*server.ServerPool
+	for _, serverPoolConfig := range cfg.ServerPools {
+		pool := server.NewServerPool(serverPoolConfig.Name)
+		for _, serverConfig := range serverPoolConfig.Servers {
+			_ = pool.AddServer(serverConfig.newServerFromConfig(serverConfig))
+		}
+		serverPools = append(serverPools, pool)
 	}
 
-	return servers, nil
+	return serverPools, nil
 }
 
-func newServerFromConfig(cfg ServerConfig) *server.Server {
+func (ServerConfig) newServerFromConfig(cfg ServerConfig) *server.Server {
 	return &server.Server{
 		ID:              cfg.ID,
 		Name:            cfg.Name,
