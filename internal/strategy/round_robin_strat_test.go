@@ -9,23 +9,40 @@ import (
 )
 
 func TestGetNextServer_NoServers(t *testing.T) {
-	serverPool := &server.ServerPool{Servers: []*server.Server{}}
-	lb := &RoundRobinLoadBalancer{
-		mu:              sync.Mutex{},
-		serverPool:      serverPool,
-		lastServerIndex: -1,
+	testCases := []struct {
+		name    string
+		servers []*server.Server
+	}{
+		{
+			name:    "no servers",
+			servers: []*server.Server{},
+		},
+		{
+			name:    "no healthy servers",
+			servers: []*server.Server{{ID: "1", IsHealthy: false}},
+		},
 	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			serverPool := &server.ServerPool{Servers: tc.servers}
+			lb := &RoundRobinLoadBalancer{
+				mu:              sync.Mutex{},
+				serverPool:      serverPool,
+				lastServerIndex: -1,
+			}
 
-	srv, err := lb.GetNextServer()
+			srv, err := lb.GetNextServer()
 
-	require.Nil(t, srv)
-	require.EqualError(t, err, "no servers found")
+			require.Nil(t, srv)
+			require.EqualError(t, err, "no healthy servers available")
+		})
+	}
 }
 
 func TestGetNextServer_LoopsThroughServersCollection(t *testing.T) {
-	s1 := &server.Server{ID: "1"}
-	s2 := &server.Server{ID: "2"}
-	s3 := &server.Server{ID: "3"}
+	s1 := &server.Server{ID: "1", IsHealthy: true}
+	s2 := &server.Server{ID: "2", IsHealthy: true}
+	s3 := &server.Server{ID: "3", IsHealthy: true}
 
 	serverPool := &server.ServerPool{
 		Servers: []*server.Server{s1, s2, s3},
@@ -47,9 +64,9 @@ func TestGetNextServer_LoopsThroughServersCollection(t *testing.T) {
 }
 
 func TestGetNextServer_ConcurrentRequests(t *testing.T) {
-	s1 := &server.Server{ID: "1"}
-	s2 := &server.Server{ID: "2"}
-	s3 := &server.Server{ID: "3"}
+	s1 := &server.Server{ID: "1", IsHealthy: true}
+	s2 := &server.Server{ID: "2", IsHealthy: true}
+	s3 := &server.Server{ID: "3", IsHealthy: true}
 
 	serverPool := &server.ServerPool{
 		Servers: []*server.Server{s1, s2, s3},

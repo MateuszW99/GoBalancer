@@ -18,9 +18,6 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 
 ## 🪜Roadmap
 
-
-## Planned Features
-
 - Configurable resilience strategies  
   Support customizable backoff, retry limits, and failure thresholds for health checks.
 
@@ -58,6 +55,17 @@ GoBalancer reads its backend server list from a JSON file like this:
     "HealthcheckUrl": "/healthcheck"
   }
 ]
+```
+
+## 🤖 Linting
+This project uses [golangci-lint](https://golangci-lint.run/) for static code analysis.
+Linting is enforced in CI, so pull requests will fail if linting issues are found.
+
+To run linter locally:
+
+```bash
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+golangci-lint run ./...
 ```
 
 ## 💻 Running locally
