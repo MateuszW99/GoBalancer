@@ -28,7 +28,8 @@ func main() {
 	for i := range servers {
 		pool.AddServer(&servers[i])
 	}
-
+	a := 1
+	a += 1
 	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
 	loadBalancer := strategy.NewLoadBalancer(roundRobin)
 	server.StartHealthChecking(pool, 5*time.Second)
