@@ -13,31 +13,29 @@ import (
 
 func main() {
 	port := flag.Int("port", 3000, "Port to listen on")
-	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
+	serverConfig := flag.String("server-config", "servers.yaml", "Servers to which traffic will be distributed")
 	flag.Parse()
 
-	servers, err := config.LoadServersFromFile(*serverConfig)
+	serverPools, err := config.LoadServersFromFile(*serverConfig)
 	if err != nil {
 		log.Fatalf("failed to load server config: %v", err)
 	}
-	if len(servers) == 0 {
+	if len(serverPools) == 0 {
 		log.Fatalf("no servers found in %v", *serverConfig)
 	}
 
-	pool := server.NewServerPool()
-	for i := range servers {
-		_ = pool.AddServer(&servers[i])
+	pool := serverPools[0] // TODO: run all pools concurrently
+	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool)
+	if err != nil {
+		log.Fatalf("failed to select strategy: %v", err)
 	}
-
-	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
-	loadBalancer := strategy.NewLoadBalancer(roundRobin)
 	server.StartHealthChecking(pool, 5*time.Second)
 	distributeLoad(*port, loadBalancer)
 
 	select {}
 }
 
-func distributeLoad(port int, loadBalancer strategy.LoadBalancer) {
+func distributeLoad(port int, loadBalancer *strategy.LoadBalancer) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 

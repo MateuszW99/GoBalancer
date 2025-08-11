@@ -1,22 +1,27 @@
-[
-  {
-    "id": "1",
-    "name": "Server 2137",
-    "protocol": "http",
-    "host": "localhost",
-    "port": 2137,
-    "url": "http://localhost:2137",
-    "healthcheckUrl": "/healthcheck",
-    "isHealthy": true
-  },
-  {
-    "id": "2",
-    "name": "Server 21370",
-    "protocol": "http",
-    "host": "localhost",
-    "port": 21370,
-    "url": "http://localhost:21370",
-    "healthcheckUrl": "/healthcheck",
-    "isHealthy": true
-  }
-]
+{
+  "serverPools": [
+    {
+      "name": "serverPool1",
+      "strategy": "rb",
+      "servers": [
+        {
+          "id": "1",
+          "name": "Server 2137",
+          "protocol": "http",
+          "host": "localhost",
+          "port": 2137,
+          "healthcheckUrl": "/healthcheck"
+        },
+        {
+          "id": "2",
+          "name": "Server 21370",
+          "protocol": "http",
+          "host": "localhost",
+          "port": 21370,
+          "healthcheckUrl": "/healthcheck",
+          "isHealthy": true
+        }
+      ]
+    }
+  ]
+}
