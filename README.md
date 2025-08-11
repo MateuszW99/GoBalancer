@@ -21,9 +21,6 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 - Configurable resilience strategies  
   Support customizable backoff, retry limits, and failure thresholds for health checks.
 
-- GitHub Actions CI  
-  Add automated testing, linting, and build checks using GitHub Actions for every push/PR.
-
 - Additional load balancing strategies  
   Implement and expose more strategies (e.g., random, least connections, weighted round-robin).
 
@@ -32,10 +29,6 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 
 - Server status API  
   Endpoint (e.g., `/status`) that returns the current health of all registered servers.
-
-- YAML configuration support  
-  Allow loading config from YAML in addition to JSON for improved readability and flexibility.
-
 
 ---
 
@@ -64,6 +57,8 @@ Applicable strategy will be selected based on the `strategy` value. Allowed stra
 }
 
 ```
+See [servers.yaml](./servers.yaml) to learn yaml-based configuration.
+
 
 ## 🤖 Linting
 This project uses [golangci-lint](https://golangci-lint.run/) for static code analysis.

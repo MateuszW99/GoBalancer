@@ -13,7 +13,7 @@ import (
 
 func main() {
 	port := flag.Int("port", 3000, "Port to listen on")
-	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
+	serverConfig := flag.String("server-config", "servers.yaml", "Servers to which traffic will be distributed")
 	flag.Parse()
 
 	serverPools, err := config.LoadServersFromFile(*serverConfig)
