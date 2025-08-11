@@ -25,15 +25,17 @@ func main() {
 	}
 
 	pool := serverPools[0] // TODO: run all pools concurrently
-	roundRobin := strategy.NewRoundRobinLoadBalancer(pool)
-	loadBalancer := strategy.NewLoadBalancer(roundRobin)
+	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool)
+	if err != nil {
+		log.Fatalf("failed to select strategy: %v", err)
+	}
 	server.StartHealthChecking(pool, 5*time.Second)
 	distributeLoad(*port, loadBalancer)
 
 	select {}
 }
 
-func distributeLoad(port int, loadBalancer strategy.LoadBalancer) {
+func distributeLoad(port int, loadBalancer *strategy.LoadBalancer) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 

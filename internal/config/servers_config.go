@@ -41,7 +41,7 @@ func LoadServersFromFile(path string) ([]*server.ServerPool, error) {
 
 	var serverPools []*server.ServerPool
 	for _, serverPoolConfig := range cfg.ServerPools {
-		pool := server.NewServerPool(serverPoolConfig.Name)
+		pool := server.NewServerPool(serverPoolConfig.Name, serverPoolConfig.Strategy)
 		for _, serverConfig := range serverPoolConfig.Servers {
 			_ = pool.AddServer(serverConfig.newServerFromConfig(serverConfig))
 		}

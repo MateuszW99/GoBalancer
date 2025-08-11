@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"errors"
 	"fmt"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"io"
@@ -11,17 +12,22 @@ import (
 	"time"
 )
 
-type BalancerStrategy interface {
+type LoadBalancerStrategy interface {
 	GetNextServer() (*server.Server, error)
 }
 
 type LoadBalancer struct {
-	strategy BalancerStrategy
+	strategy LoadBalancerStrategy
 }
 
-func NewLoadBalancer(strategy BalancerStrategy) LoadBalancer {
-	return LoadBalancer{
-		strategy: strategy,
+func SelectLoadBalancerWithStrategy(strat StrategyType, serverPool *server.ServerPool) (*LoadBalancer, error) {
+	switch strat {
+	case RoundRobinStrategy:
+		return &LoadBalancer{
+			strategy: NewRoundRobinLoadBalancer(serverPool),
+		}, nil
+	default:
+		return nil, errors.New("unknown strategy")
 	}
 }
 

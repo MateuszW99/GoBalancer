@@ -42,7 +42,7 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 ## ⚙️ Configuration
 
 GoBalancer reads its backend server list from a JSON file like this:
-
+Applicable strategy will be selected based on the `strategy` value. Allowed strategies are: `rb` (more to come).
 ```json
 {
   "serverPools": [
