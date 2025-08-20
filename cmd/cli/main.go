@@ -6,36 +6,46 @@ import (
 	"github.com/MateuszW99/GoBalancer/internal/config"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"github.com/MateuszW99/GoBalancer/internal/strategy"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"time"
 )
 
 func main() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("failed to init logger: %v", err)
+	}
+	defer func() {
+		_ = logger.Sync()
+	}()
+	sugar := logger.Sugar()
+
 	port := flag.Int("port", 3000, "Port to listen on")
 	serverConfig := flag.String("server-config", "servers.yaml", "Servers to which traffic will be distributed")
 	flag.Parse()
 
-	serverPools, err := config.LoadServersFromFile(*serverConfig)
+	serverPools, err := config.LoadServersFromFile(*serverConfig, sugar)
 	if err != nil {
-		log.Fatalf("failed to load server config: %v", err)
+		sugar.Fatalf("failed to load server config: %v", err)
 	}
 	if len(serverPools) == 0 {
-		log.Fatalf("no servers found in %v", *serverConfig)
+		sugar.Fatalf("no servers found in %v", *serverConfig)
 	}
 
 	pool := serverPools[0] // TODO: run all pools concurrently
-	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool)
+	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool, sugar)
 	if err != nil {
-		log.Fatalf("failed to select strategy: %v", err)
+		sugar.Fatal("failed to select strategy", zap.Error(err))
 	}
-	server.StartHealthChecking(pool, 5*time.Second)
-	distributeLoad(*port, loadBalancer)
+	server.StartHealthChecking(pool, 5*time.Second, sugar)
+	distributeLoad(*port, loadBalancer, sugar)
 
 	select {}
 }
 
-func distributeLoad(port int, loadBalancer *strategy.LoadBalancer) {
+func distributeLoad(port int, loadBalancer *strategy.LoadBalancer, logger *zap.SugaredLogger) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 
@@ -44,9 +54,9 @@ func distributeLoad(port int, loadBalancer *strategy.LoadBalancer) {
 		Handler: mux,
 	}
 
-	log.Printf("starting load balancer on port %d", port)
+	logger.Info("starting load balancer on port", zap.Int("port", port))
 
 	if err := trafficDistributor.ListenAndServe(); err != nil {
-		log.Fatalf("load balancer on port %d failed: %v", port, err)
+		logger.Fatal("load balancer failed", zap.Int("port", port), zap.Error(err))
 	}
 }

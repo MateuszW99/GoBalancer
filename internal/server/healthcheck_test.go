@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -54,7 +55,7 @@ func TestStartHealthChecking_MarksServerHealthy(t *testing.T) {
 		Servers: []*Server{lbServer},
 	}
 
-	StartHealthChecking(pool, 100*time.Millisecond)
+	StartHealthChecking(pool, 100*time.Millisecond, zap.NewNop().Sugar())
 	time.Sleep(300 * time.Millisecond)
 
 	lbServer.mu.RLock()
@@ -78,7 +79,7 @@ func TestStartHealthChecking_MarksServerUnhealthyAfterRetries(t *testing.T) {
 		Servers: []*Server{lbServer},
 	}
 
-	StartHealthChecking(pool, 100*time.Millisecond)
+	StartHealthChecking(pool, 100*time.Millisecond, zap.NewNop().Sugar())
 	time.Sleep((retries + 1) * time.Millisecond)
 
 	lbServer.mu.RLock()
