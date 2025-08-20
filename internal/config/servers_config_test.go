@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"testing"
@@ -34,7 +35,7 @@ func TestLoadServersFromFile_GivenJsonFile_ReturnsServerPools(t *testing.T) {
 	err := os.WriteFile(filePath, []byte(content), 0644)
 	assert.NoError(t, err)
 
-	serverPool, err := LoadServersFromFile(filePath)
+	serverPool, err := LoadServersFromFile(filePath, zap.NewNop().Sugar())
 	assert.NoError(t, err)
 	assert.Len(t, serverPool, 1)
 	assert.Equal(t, "serverPool", serverPool[0].Name)
@@ -69,7 +70,7 @@ serverPools:
 	err := os.WriteFile(filePath, []byte(content), 0644)
 	assert.NoError(t, err)
 
-	serverPool, err := LoadServersFromFile(filePath)
+	serverPool, err := LoadServersFromFile(filePath, zap.NewNop().Sugar())
 	assert.NoError(t, err)
 	assert.Len(t, serverPool, 1)
 	assert.Equal(t, "serverPool", serverPool[0].Name)
@@ -90,7 +91,7 @@ func TestLoadServersFromFile_GivenUnsupportedFileExtension_ReturnsError(t *testi
 	err := os.WriteFile(filePath, []byte(`{}`), 0644)
 	require.NoError(t, err)
 
-	_, err = LoadServersFromFile(filePath)
+	_, err = LoadServersFromFile(filePath, zap.NewNop().Sugar())
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "unsupported config format: .txt")
 }

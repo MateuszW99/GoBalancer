@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -25,18 +25,18 @@ func GetHealthyServers(pool *ServerPool) []*Server {
 	return healthyServers
 }
 
-func StartHealthChecking(pool *ServerPool, interval time.Duration) {
+func StartHealthChecking(pool *ServerPool, interval time.Duration, logger *zap.SugaredLogger) {
 	go func() {
 		for {
 			for _, srv := range pool.GetAllServers() {
-				checkServerHealth(srv)
+				checkServerHealth(srv, logger)
 			}
 			time.Sleep(interval)
 		}
 	}()
 }
 
-func checkServerHealth(server *Server) {
+func checkServerHealth(server *Server, logger *zap.SugaredLogger) {
 	client := http.Client{
 		Timeout: timeout,
 	}
@@ -50,8 +50,8 @@ func checkServerHealth(server *Server) {
 			break
 		}
 
-		log.Printf("%s returned error response for healthcheck %v", server.Name, err)
-		log.Printf("running %d retry", i+1)
+		logger.Warn("server returned error response for healthcheck", zap.String("serverName", server.Name), zap.Error(err))
+		logger.Warn("retrying healthcheck", zap.Int("retry", i+1), zap.String("serverName", server.Name))
 
 		if i < retries-1 {
 			time.Sleep(delay)
@@ -64,10 +64,10 @@ func checkServerHealth(server *Server) {
 	server.LastHealthCheck = time.Now()
 
 	if success {
-		log.Printf("%s is healthy", server.Name)
+		logger.Info("server is healthy", zap.String("serverName", server.Name))
 		server.IsHealthy = true
 	} else {
-		log.Printf("%s is unhealthy", server.Name)
+		logger.Info("server is unhealthy", zap.String("serverName", server.Name))
 		server.IsHealthy = false
 	}
 }

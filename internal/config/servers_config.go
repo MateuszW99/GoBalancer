@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/MateuszW99/GoBalancer/internal/server"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
@@ -29,7 +30,7 @@ type ServerConfig struct {
 	HealthcheckUrl string `json:"healthcheckUrl" yaml:"healthcheckUrl"`
 }
 
-func LoadServersFromFile(path string) ([]*server.ServerPool, error) {
+func LoadServersFromFile(path string, logger *zap.SugaredLogger) ([]*server.ServerPool, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -38,6 +39,7 @@ func LoadServersFromFile(path string) ([]*server.ServerPool, error) {
 	ext := filepath.Ext(path)
 	cfg := &LoadBalancerConfig{}
 
+	logger.Infof("reading server configuration from %s", path)
 	switch ext {
 	case ".json":
 		if err := json.Unmarshal(data, cfg); err != nil {
@@ -50,6 +52,8 @@ func LoadServersFromFile(path string) ([]*server.ServerPool, error) {
 	default:
 		return nil, fmt.Errorf("unsupported config format: %s", ext)
 	}
+
+	logger.Info("found %d server configs", len(cfg.ServerPools))
 
 	var serverPools []*server.ServerPool
 	for _, serverPoolConfig := range cfg.ServerPools {
