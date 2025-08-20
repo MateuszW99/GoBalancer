@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /gobalancer ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /gobalancer ./cmd/cli/main.go
 
 FROM gcr.io/distroless/static
 

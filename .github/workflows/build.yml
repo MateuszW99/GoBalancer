@@ -38,4 +38,6 @@ jobs:
 
       - name: Build GoBalancer binary
         if: success()
-        run: go build -v -o gobalancer ./cmd/main.go
+        run: |
+          mkdir -p bin
+          go build -v -o bin/api ./cmd/api
