@@ -40,4 +40,4 @@ jobs:
         if: success()
         run: |
           mkdir -p bin
-          go build -v -o bin/api ./cmd/api
+          go build -v -o bin/api ./cmd/cli
