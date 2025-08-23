@@ -53,8 +53,8 @@ func checkServerHealth(server *Server, logger *zap.SugaredLogger) {
 			break
 		}
 
-		logger.Warn("server returned error response for healthcheck", "serverName", server.Name, "error", err)
-		logger.Warn("retrying healthcheck", zap.Int("retry", i+1), "serverName", server.Name)
+		logger.Warnw("server returned error response for healthcheck", "serverName", server.Name, "error", err)
+		logger.Warnw("retrying healthcheck", "retry", i+1, "serverName", server.Name)
 		if i < retries-1 {
 			time.Sleep(delay)
 		}

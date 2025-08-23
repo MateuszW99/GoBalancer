@@ -37,7 +37,7 @@ func main() {
 	pool := serverPools[0] // TODO: run all pools concurrently
 	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool, sugar)
 	if err != nil {
-		sugar.Fatal("failed to select strategy", zap.Error(err))
+		sugar.Fatalw("failed to select strategy", "error", err)
 	}
 	server.StartHealthChecking(pool, 5*time.Second, sugar)
 	distributeLoad(*port, loadBalancer, sugar)
@@ -54,9 +54,9 @@ func distributeLoad(port int, loadBalancer *strategy.LoadBalancer, logger *zap.S
 		Handler: mux,
 	}
 
-	logger.Info("starting load balancer on port", zap.Int("port", port))
+	logger.Info("starting load balancer on port", "port", port)
 
 	if err := trafficDistributor.ListenAndServe(); err != nil {
-		logger.Fatal("load balancer failed", zap.Int("port", port), zap.Error(err))
+		logger.Fatalw("load balancer failed", "port", port, "err", err)
 	}
 }
