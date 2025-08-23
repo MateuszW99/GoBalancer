@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -12,15 +13,17 @@ const (
 	timeout = 2 * time.Second
 )
 
+var ErrNoHealthyServers = errors.New("no healthy servers available")
+
 func GetHealthyServers(pool *ServerPool) []*Server {
 	all := pool.GetAllServers()
 	healthyServers := make([]*Server, 0, len(all))
-	for _, server := range all {
-		server.mu.RLock()
-		if server.IsHealthy {
-			healthyServers = append(healthyServers, server)
+	for _, srv := range all {
+		srv.mu.RLock()
+		if srv.IsHealthy {
+			healthyServers = append(healthyServers, srv)
 		}
-		server.mu.RUnlock()
+		srv.mu.RUnlock()
 	}
 	return healthyServers
 }
@@ -50,9 +53,8 @@ func checkServerHealth(server *Server, logger *zap.SugaredLogger) {
 			break
 		}
 
-		logger.Warn("server returned error response for healthcheck", zap.String("serverName", server.Name), zap.Error(err))
-		logger.Warn("retrying healthcheck", zap.Int("retry", i+1), zap.String("serverName", server.Name))
-
+		logger.Warn("server returned error response for healthcheck", "serverName", server.Name, "error", err)
+		logger.Warn("retrying healthcheck", zap.Int("retry", i+1), "serverName", server.Name)
 		if i < retries-1 {
 			time.Sleep(delay)
 		}
@@ -64,10 +66,10 @@ func checkServerHealth(server *Server, logger *zap.SugaredLogger) {
 	server.LastHealthCheck = time.Now()
 
 	if success {
-		logger.Info("server is healthy", zap.String("serverName", server.Name))
+		logger.Infow("server is healthy", "serverName", server.Name)
 		server.IsHealthy = true
 	} else {
-		logger.Info("server is unhealthy", zap.String("serverName", server.Name))
+		logger.Infow("server is unhealthy", "serverName", server.Name)
 		server.IsHealthy = false
 	}
 }
