@@ -7,7 +7,7 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 
 ## 🚀 Features
 
-- ⚖️ Round-robin request distribution
+- ⚖️ Round-robin and least connections request distribution algorithms
   - more strategies coming _soon_
 - 💚 Active health checks with retry logic
 - 🔌 Plug-and-play load balancing strategies
@@ -22,7 +22,7 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
   Support customizable backoff, retry limits, and failure thresholds for health checks.
 
 - Additional load balancing strategies  
-  Implement and expose more strategies (e.g., random, least connections, weighted round-robin).
+  Implement and expose more strategies (e.g., random, weighted round-robin).
 
 - Multiple server pools  
   Enable support for managing multiple pools concurrently, each with its own strategy (e.g., blue/green, service-based routing).
