@@ -15,7 +15,7 @@ type Server struct {
 	IsHealthy       bool
 	LastHealthCheck time.Time
 	HealthcheckUrl  string
-	mu              sync.RWMutex
+	Mu              sync.RWMutex
 }
 
 type ServerPool struct {
