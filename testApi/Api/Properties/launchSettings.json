@@ -28,11 +28,11 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "server2138": {
+    "server21370": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "https://localhost:21381;http://localhost:2138",
+      "applicationUrl": "https://localhost:21370;http://localhost:2170",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
