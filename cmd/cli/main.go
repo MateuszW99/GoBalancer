@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	sugar := logger.Sugar()
 
 	port := flag.Int("port", 3000, "Port to listen on")
-	serverConfig := flag.String("server-config", "servers.yaml", "Servers to which traffic will be distributed")
+	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
 	flag.Parse()
 
 	serverPools, err := config.LoadServersFromFile(*serverConfig, sugar)
@@ -39,7 +38,7 @@ func main() {
 	if err != nil {
 		sugar.Fatalw("failed to select strategy", "error", err)
 	}
-	server.StartHealthChecking(pool, 5*time.Second, sugar)
+	server.StartHealthChecking(pool, server.DefaultHealthCheckConfig, sugar)
 	distributeLoad(*port, loadBalancer, sugar)
 
 	select {}
