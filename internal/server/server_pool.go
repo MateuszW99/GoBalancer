@@ -15,13 +15,14 @@ type Server struct {
 	IsHealthy       bool
 	LastHealthCheck time.Time
 	HealthcheckUrl  string
-	mu              sync.RWMutex
+	Mu              sync.RWMutex
 }
 
 type ServerPool struct {
 	Name     string
 	Strategy string
 	Servers  []*Server
+	mu       sync.RWMutex
 }
 
 func NewServerPool(name string, strategy string) *ServerPool {
@@ -33,10 +34,16 @@ func NewServerPool(name string, strategy string) *ServerPool {
 }
 
 func (serverPool *ServerPool) AddServer(server *Server) error {
+	serverPool.mu.Lock()
 	serverPool.Servers = append(serverPool.Servers, server)
+	serverPool.mu.Unlock()
 	return nil
 }
 
 func (serverPool *ServerPool) GetAllServers() []*Server {
-	return serverPool.Servers
+	serverPool.mu.RLock()
+	servers := make([]*Server, len(serverPool.Servers))
+	copy(servers, serverPool.Servers)
+	serverPool.mu.RUnlock()
+	return servers
 }

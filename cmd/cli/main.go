@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	sugar := logger.Sugar()
 
 	port := flag.Int("port", 3000, "Port to listen on")
-	serverConfig := flag.String("server-config", "servers.yaml", "Servers to which traffic will be distributed")
+	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
 	flag.Parse()
 
 	serverPools, err := config.LoadServersFromFile(*serverConfig, sugar)
@@ -37,9 +36,9 @@ func main() {
 	pool := serverPools[0] // TODO: run all pools concurrently
 	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool, sugar)
 	if err != nil {
-		sugar.Fatal("failed to select strategy", zap.Error(err))
+		sugar.Fatalw("failed to select strategy", "error", err)
 	}
-	server.StartHealthChecking(pool, 5*time.Second, sugar)
+	server.StartHealthChecking(pool, server.DefaultHealthCheckConfig, sugar)
 	distributeLoad(*port, loadBalancer, sugar)
 
 	select {}
@@ -54,9 +53,9 @@ func distributeLoad(port int, loadBalancer *strategy.LoadBalancer, logger *zap.S
 		Handler: mux,
 	}
 
-	logger.Info("starting load balancer on port", zap.Int("port", port))
+	logger.Info("starting load balancer on port", "port", port)
 
 	if err := trafficDistributor.ListenAndServe(); err != nil {
-		logger.Fatal("load balancer failed", zap.Int("port", port), zap.Error(err))
+		logger.Fatalw("load balancer failed", "port", port, "err", err)
 	}
 }

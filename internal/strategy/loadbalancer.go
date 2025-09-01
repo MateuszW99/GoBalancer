@@ -14,6 +14,7 @@ import (
 
 type LoadBalancerStrategy interface {
 	GetNextServer() (*server.Server, error)
+	Done(*server.Server)
 }
 
 type LoadBalancer struct {
@@ -22,30 +23,38 @@ type LoadBalancer struct {
 }
 
 func SelectLoadBalancerWithStrategy(strat StrategyType, serverPool *server.ServerPool, logger *zap.SugaredLogger) (*LoadBalancer, error) {
+	var strategy LoadBalancerStrategy
+
 	switch strat {
 	case RoundRobinStrategy:
-		return &LoadBalancer{
-			strategy: NewRoundRobinLoadBalancer(serverPool),
-			logger:   logger,
-		}, nil
+		strategy = NewRoundRobinLoadBalancer(serverPool)
+	case LeastConnections:
+		strategy = NewLeastConnectionLoadBalancer(serverPool)
 	default:
 		return nil, errors.New("unknown strategy")
 	}
+
+	return &LoadBalancer{
+		strategy: strategy,
+		logger:   logger,
+	}, nil
 }
 
 func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 	nextServer, err := lb.strategy.GetNextServer()
 
 	if err != nil {
-		lb.logger.Info("failed to select next server", zap.Error(err))
+		lb.logger.Infow("failed to select next server", "error", err)
 		http.Error(w, "internal nextServer error", http.StatusInternalServerError)
 		return
 	}
-	lb.logger.Debug("Calling next server", zap.String("serverName", nextServer.Name))
+	lb.logger.Debugw("Calling next server", "serverName", nextServer.Name)
+
+	defer lb.strategy.Done(nextServer)
 
 	targetURL, err := url.Parse(nextServer.Url)
 	if err != nil {
-		lb.logger.Error("failed to parse nextServer url", zap.String("serverName", nextServer.Name))
+		lb.logger.Errorw("failed to parse nextServer url", "serverName", nextServer.Name)
 		http.Error(w, "invalid backend URL", http.StatusInternalServerError)
 		return
 	}
@@ -57,7 +66,7 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest(r.Method, targetPath, r.Body)
 	if err != nil {
-		lb.logger.Error("failed to create request to server", zap.String("serverName", nextServer.Name))
+		lb.logger.Errorw("failed to create request to backend", "serverName", nextServer.Name)
 		http.Error(w, "failed to create request to backend", http.StatusInternalServerError)
 		return
 	}
@@ -76,14 +85,14 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		lb.logger.Error("failed to reach server", zap.String("serverName", nextServer.Name))
+		lb.logger.Errorw("failed to reach server", "serverName", nextServer.Name)
 		http.Error(w, "failed to reach backend server", http.StatusBadGateway)
 		return
 	}
 
 	byteResp, err := io.ReadAll(res.Body)
 	if err != nil {
-		lb.logger.Error("failed to read response from server", zap.String("serverName", nextServer.Name))
+		lb.logger.Errorw("failed to read response from server", "serverName", nextServer.Name)
 		http.Error(w, "failed to read response body", http.StatusInternalServerError)
 		return
 	}

@@ -10,8 +10,18 @@ app.UseHttpLogging();
 app.MapGet("/healthcheck",
     (HttpContext context) => new HealthCheckResponse("1.0.0", DateTime.UtcNow, context.Request.Host.Port));
 
-app.MapPost("/test-endpoint", ([FromBody] TestEndpointRequest request, HttpContext context) =>
-        Results.Json(new TestEndpointResponse(context.Request.Host.Port), statusCode: request.RequestedResponseCode));
+app.MapPost("/test-endpoint", async ([FromBody] TestEndpointRequest request, HttpContext context) =>
+{
+    if (request.Delay > 0)
+    {
+        await Task.Delay(request.Delay);
+    }
+
+    return Results.Json(
+        new TestEndpointResponse(context.Request.Host.Port),
+        statusCode: request.RequestedResponseCode);
+});
+
 
 var ports = Environment.GetEnvironmentVariable("APP_PORTS")?.Split(';') ?? [];
 foreach (var port in ports)
@@ -21,7 +31,7 @@ app.Run();
 
 sealed record HealthCheckResponse(string Version, DateTime CurrentDate, int? Port) : ApiBaseResponse(Port);
 
-sealed record TestEndpointRequest(int RequestedResponseCode);
+sealed record TestEndpointRequest(int RequestedResponseCode, int Delay);
 
 sealed record TestEndpointResponse(int? Port) : ApiBaseResponse(Port);
 

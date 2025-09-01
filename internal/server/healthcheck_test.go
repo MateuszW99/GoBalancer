@@ -55,11 +55,11 @@ func TestStartHealthChecking_MarksServerHealthy(t *testing.T) {
 		Servers: []*Server{lbServer},
 	}
 
-	StartHealthChecking(pool, 100*time.Millisecond, zap.NewNop().Sugar())
+	StartHealthChecking(pool, DefaultHealthCheckConfig, zap.NewNop().Sugar())
 	time.Sleep(300 * time.Millisecond)
 
-	lbServer.mu.RLock()
-	defer lbServer.mu.RUnlock()
+	lbServer.Mu.RLock()
+	defer lbServer.Mu.RUnlock()
 	assert.True(t, lbServer.IsHealthy, "server should be marked healthy")
 }
 
@@ -79,10 +79,10 @@ func TestStartHealthChecking_MarksServerUnhealthyAfterRetries(t *testing.T) {
 		Servers: []*Server{lbServer},
 	}
 
-	StartHealthChecking(pool, 100*time.Millisecond, zap.NewNop().Sugar())
-	time.Sleep((retries + 1) * time.Millisecond)
+	StartHealthChecking(pool, DefaultHealthCheckConfig, zap.NewNop().Sugar())
+	time.Sleep(time.Duration(DefaultHealthCheckConfig.Retries + 1))
 
-	lbServer.mu.RLock()
-	defer lbServer.mu.RUnlock()
-	assert.False(t, lbServer.IsHealthy, "server should be marked unhealthy after %d retries", retries)
+	lbServer.Mu.RLock()
+	defer lbServer.Mu.RUnlock()
+	assert.False(t, lbServer.IsHealthy, "server should be marked unhealthy after %d retries", DefaultHealthCheckConfig.Retries)
 }

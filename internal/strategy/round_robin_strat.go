@@ -1,7 +1,6 @@
 package strategy
 
 import (
-	"errors"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"sync"
 )
@@ -21,13 +20,15 @@ func NewRoundRobinLoadBalancer(serverPool *server.ServerPool) *RoundRobinLoadBal
 
 func (lb *RoundRobinLoadBalancer) GetNextServer() (*server.Server, error) {
 	servers := server.GetHealthyServers(lb.serverPool)
-
 	if len(servers) == 0 {
-		return nil, errors.New("no healthy servers available")
+		return nil, server.ErrNoHealthyServers
 	}
 
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
+
 	lb.lastServerIndex = (lb.lastServerIndex + 1) % len(servers)
 	return servers[lb.lastServerIndex], nil
 }
+
+func (lb *RoundRobinLoadBalancer) Done(_ *server.Server) {}
