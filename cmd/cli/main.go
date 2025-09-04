@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/MateuszW99/GoBalancer/internal/config"
@@ -9,6 +10,10 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -21,7 +26,8 @@ func main() {
 	}()
 	sugar := logger.Sugar()
 
-	port := flag.Int("port", 3000, "Port to listen on")
+	lbPort := flag.Int("lb-port", 3000, "Port for load balancer to listen on")
+	adminPort := flag.Int("admin-port", 3001, "Port for admin api to listen on")
 	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
 	flag.Parse()
 
@@ -38,24 +44,61 @@ func main() {
 	if err != nil {
 		sugar.Fatalw("failed to select strategy", "error", err)
 	}
-	server.StartHealthChecking(pool, server.DefaultHealthCheckConfig, sugar)
-	distributeLoad(*port, loadBalancer, sugar)
 
-	select {}
+	errCh := make(chan error, 2)
+
+	adminServer := configureAdminServer(*adminPort)
+	go func() {
+		sugar.Infow("starting admin server on port", "port", *adminPort)
+		errCh <- adminServer.ListenAndServe()
+	}()
+
+	server.StartHealthChecking(pool, server.DefaultHealthCheckConfig, sugar)
+
+	lbServer := configureLoadBalancerServer(*lbPort, loadBalancer)
+	go func() {
+		sugar.Infow("starting load balancer on port", "port", *lbPort)
+		errCh <- lbServer.ListenAndServe()
+	}()
+
+	if err != nil {
+		sugar.Fatalf("failed to start load balancer server: %v", err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case err := <-errCh:
+		sugar.Fatalw("load balancer failed", "port", *lbPort, "err", err)
+	case <-sig:
+		sugar.Info("shutting down")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = adminServer.Shutdown(ctx)
+		_ = lbServer.Shutdown(ctx)
+	}
 }
 
-func distributeLoad(port int, loadBalancer *strategy.LoadBalancer, logger *zap.SugaredLogger) {
+func configureLoadBalancerServer(port int, loadBalancer *strategy.LoadBalancer) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", loadBalancer.Serve)
 
-	trafficDistributor := &http.Server{
+	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 
-	logger.Info("starting load balancer on port", "port", port)
+	return srv
+}
 
-	if err := trafficDistributor.ListenAndServe(); err != nil {
-		logger.Fatalw("load balancer failed", "port", port, "err", err)
+func configureAdminServer(port int) *http.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/admin", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "hello, world") })
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: mux,
 	}
+
+	return srv
 }

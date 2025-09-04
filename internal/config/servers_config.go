@@ -53,7 +53,7 @@ func LoadServersFromFile(path string, logger *zap.SugaredLogger) ([]*server.Serv
 		return nil, fmt.Errorf("unsupported config format: %s", ext)
 	}
 
-	logger.Info("found %d server configs", len(cfg.ServerPools))
+	logger.Infow("found %d server configs", len(cfg.ServerPools))
 
 	var serverPools []*server.ServerPool
 	for _, serverPoolConfig := range cfg.ServerPools {
