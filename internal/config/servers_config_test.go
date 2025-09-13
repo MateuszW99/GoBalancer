@@ -22,7 +22,7 @@ func TestLoadServersFromFile_GivenJsonFile_ReturnsServerPools(t *testing.T) {
 					{
 						"id": "1",
 						"name": "server1",
-						"protocol": "http",
+						"protocol": "api",
 						"host": "localhost",
 						"port": 8080,
 						"healthcheckUrl": "/health"
@@ -44,7 +44,7 @@ func TestLoadServersFromFile_GivenJsonFile_ReturnsServerPools(t *testing.T) {
 	assert.Len(t, serverPool[0].Servers, 1)
 	assert.Equal(t, "1", serverPool[0].Servers[0].ID)
 	assert.Equal(t, "server1", serverPool[0].Servers[0].Name)
-	assert.Equal(t, "http", serverPool[0].Servers[0].Protocol)
+	assert.Equal(t, "api", serverPool[0].Servers[0].Protocol)
 	assert.Equal(t, "localhost", serverPool[0].Servers[0].Host)
 	assert.Equal(t, 8080, serverPool[0].Servers[0].Port)
 	assert.Equal(t, "/health", serverPool[0].Servers[0].HealthcheckUrl)
@@ -61,7 +61,7 @@ serverPools:
     servers:
       - id: "1"
         name: server1
-        protocol: http
+        protocol: api
         host: localhost
         port: 8080
         healthcheckUrl: /health
@@ -79,7 +79,7 @@ serverPools:
 	assert.Len(t, serverPool[0].Servers, 1)
 	assert.Equal(t, "1", serverPool[0].Servers[0].ID)
 	assert.Equal(t, "server1", serverPool[0].Servers[0].Name)
-	assert.Equal(t, "http", serverPool[0].Servers[0].Protocol)
+	assert.Equal(t, "api", serverPool[0].Servers[0].Protocol)
 	assert.Equal(t, "localhost", serverPool[0].Servers[0].Host)
 	assert.Equal(t, 8080, serverPool[0].Servers[0].Port)
 	assert.Equal(t, "/health", serverPool[0].Servers[0].HealthcheckUrl)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/MateuszW99/GoBalancer/internal/api"
 	"github.com/MateuszW99/GoBalancer/internal/config"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"github.com/MateuszW99/GoBalancer/internal/strategy"
@@ -47,7 +48,8 @@ func main() {
 
 	errCh := make(chan error, 2)
 
-	adminServer := configureAdminServer(*adminPort)
+	adminApi := api.NewAdminApi(serverPools, sugar)
+	adminServer := configureAdminServer(*adminPort, adminApi)
 	go func() {
 		sugar.Infow("starting admin server on port", "port", *adminPort)
 		errCh <- adminServer.ListenAndServe()
@@ -91,13 +93,11 @@ func configureLoadBalancerServer(port int, loadBalancer *strategy.LoadBalancer) 
 	return srv
 }
 
-func configureAdminServer(port int) *http.Server {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/admin", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "hello, world") })
-
+func configureAdminServer(port int, admin *api.AdminApi) *http.Server {
+	router := api.NewRouter(admin)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
+		Handler: router,
 	}
 
 	return srv

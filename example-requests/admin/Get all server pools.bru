@@ -1,0 +1,15 @@
+meta {
+  name: Get all server pools
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3001/admin/serverPools
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
