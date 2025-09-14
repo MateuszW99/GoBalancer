@@ -22,7 +22,7 @@ func TestGetAllServerPools_ReturnsAllConfiguredServerPools(t *testing.T) {
 	}
 
 	api := NewAdminApi([]*server.ServerPool{pool}, zap.NewNop().Sugar())
-	r := NewRouter(api)
+	r := NewAdminRouter(api)
 
 	request := httptest.NewRequest(http.MethodGet, "/admin/serverPools", nil)
 	rec := httptest.NewRecorder()
@@ -53,7 +53,7 @@ func TestGetServerPool_WhenServerPoolExists_ReturnsOKWithResponse(t *testing.T) 
 	}
 
 	api := NewAdminApi([]*server.ServerPool{pool}, zap.NewNop().Sugar())
-	r := NewRouter(api)
+	r := NewAdminRouter(api)
 
 	request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/admin/serverPools/%s", poolName), nil)
 	rec := httptest.NewRecorder()
@@ -78,7 +78,7 @@ func TestGetServerPool_WhenServerPoolExists_ReturnsNotFound(t *testing.T) {
 	}
 
 	api := NewAdminApi([]*server.ServerPool{pool}, zap.NewNop().Sugar())
-	r := NewRouter(api)
+	r := NewAdminRouter(api)
 
 	request := httptest.NewRequest(http.MethodGet, "/admin/serverPools/poolB", nil)
 	rec := httptest.NewRecorder()
