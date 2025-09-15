@@ -21,7 +21,10 @@ func Test_NewApp_BuildsAppWithExpectedServers(t *testing.T) {
 		AdminPort: 2,
 	}
 
-	app, err := NewApp(cfg, zap.NewNop().Sugar())
+	app, err := NewApp(
+		WithConfig(cfg),
+		WithLogger(zap.NewNop().Sugar()),
+	)
 	require.NoError(t, err)
 
 	assert.Equal(t, cfg, app.Cfg)

@@ -31,7 +31,10 @@ func main() {
 		sugar.Fatalw("failed to build app config", "err", err)
 	}
 
-	application, err := app.NewApp(appCfg, sugar)
+	application, err := app.NewApp(
+		app.WithConfig(appCfg),
+		app.WithLogger(sugar),
+	)
 	if err != nil {
 		sugar.Fatalw("failed to build app", "err", err)
 	}
