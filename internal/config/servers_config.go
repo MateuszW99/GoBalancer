@@ -80,7 +80,7 @@ func loadLBConfig(path string, logger *zap.SugaredLogger) (*LoadBalancerConfig, 
 		return nil, fmt.Errorf("unsupported config format: %s", ext)
 	}
 
-	logger.Infow("found %d server configs", len(cfg.ServerPools))
+	logger.Infof("found %d server configs", len(cfg.ServerPools))
 
 	return cfg, nil
 }

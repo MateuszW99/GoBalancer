@@ -74,6 +74,7 @@ func WithLoadBalancerFactory(f func(int, *strategy.LoadBalancer) *http.Server) O
 		return nil
 	}
 }
+
 func WithAdminServerFactory(f func(int, []*server.ServerPool, *zap.SugaredLogger) *http.Server) Option {
 	return func(o *options) error {
 		o.adminServerFactory = f
