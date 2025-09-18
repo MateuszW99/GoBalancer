@@ -11,9 +11,10 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
   - more strategies coming _soon_
 - 💚 Active health checks with retry logic
 - 🔌 Plug-and-play load balancing strategies
+- 📃 API to read server status
+  - Import [example requests](/example-requests) to [Bruno](https://www.usebruno.com/) to see all endpoints 
 - 🐳 Docker & Docker Compose support
 - 📦 Lightweight, built with `distroless` for production
-
 ---
 
 ## 🪜Roadmap
@@ -26,9 +27,6 @@ It supports health checking, multiple load balancing strategies (e.g. Round Robi
 
 - Multiple server pools  
   Enable support for managing multiple pools concurrently, each with its own strategy (e.g., blue/green, service-based routing).
-
-- Server status API  
-  Endpoint (e.g., `/status`) that returns the current health of all registered servers.
 
 ---
 
@@ -74,9 +72,10 @@ golangci-lint run ./...
 ## 💻 Running locally
 Simply run the following command to start GoBalancing:
 ```bash
-go run ./cmd/main.go \
+go run ./cmd/cli/main.go \
   --server-config=<path-to-servers.json-config> \
-  --port=3000
+  --admin-port=3001 \
+  --lb-port=3000
 ```
 
 Otherwise, you can run GoBalancer along with test apis (ports 2137 and 21370) in containers:

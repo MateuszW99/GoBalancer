@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/MateuszW99/GoBalancer/internal/server"
 	"go.uber.org/zap"
@@ -11,17 +12,23 @@ import (
 	"time"
 )
 
-type LoadBalancerConfig struct {
-	ServerPools []ServerPoolConfig `json:"serverPools" yaml:"serverPools"`
+type AppConfig struct {
+	ServerPools []*server.ServerPool
+	LbPort      int
+	AdminPort   int
 }
 
-type ServerPoolConfig struct {
+type LoadBalancerConfig struct {
+	ServerPools []serverPoolConfig `json:"serverPools" yaml:"serverPools"`
+}
+
+type serverPoolConfig struct {
 	Name     string         `json:"name" yaml:"name"`
 	Strategy string         `json:"strategy" yaml:"strategy"`
-	Servers  []ServerConfig `json:"servers" yaml:"servers"`
+	Servers  []serverConfig `json:"servers" yaml:"servers"`
 }
 
-type ServerConfig struct {
+type serverConfig struct {
 	ID             string `json:"id" yaml:"id"`
 	Name           string `json:"name" yaml:"name"`
 	Protocol       string `json:"protocol" yaml:"protocol"`
@@ -30,7 +37,27 @@ type ServerConfig struct {
 	HealthcheckUrl string `json:"healthcheckUrl" yaml:"healthcheckUrl"`
 }
 
-func LoadServersFromFile(path string, logger *zap.SugaredLogger) ([]*server.ServerPool, error) {
+func Load(logger *zap.SugaredLogger) (*AppConfig, error) {
+	lbPort, adminPort, serverConfig := readConfigFlags()
+
+	lbConfig, err := loadLBConfig(serverConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+	if len(lbConfig.ServerPools) == 0 {
+		return nil, fmt.Errorf("no servers found in %v", serverConfig)
+	}
+
+	serverPools := buildServerPools(lbConfig)
+
+	return &AppConfig{
+		ServerPools: serverPools,
+		LbPort:      lbPort,
+		AdminPort:   adminPort,
+	}, nil
+}
+
+func loadLBConfig(path string, logger *zap.SugaredLogger) (*LoadBalancerConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -53,8 +80,20 @@ func LoadServersFromFile(path string, logger *zap.SugaredLogger) ([]*server.Serv
 		return nil, fmt.Errorf("unsupported config format: %s", ext)
 	}
 
-	logger.Info("found %d server configs", len(cfg.ServerPools))
+	logger.Infof("found %d server configs", len(cfg.ServerPools))
 
+	return cfg, nil
+}
+
+func readConfigFlags() (lbPort int, adminPort int, serverConfigPath string) {
+	lbPortFlag := flag.Int("lb-port", 3000, "Port for load balancer to listen on")
+	adminPortFlag := flag.Int("admin-port", 3001, "Port for admin api to listen on")
+	serverConfigPathFlag := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
+	flag.Parse()
+	return *lbPortFlag, *adminPortFlag, *serverConfigPathFlag
+}
+
+func buildServerPools(cfg *LoadBalancerConfig) []*server.ServerPool {
 	var serverPools []*server.ServerPool
 	for _, serverPoolConfig := range cfg.ServerPools {
 		pool := server.NewServerPool(serverPoolConfig.Name, serverPoolConfig.Strategy)
@@ -63,11 +102,10 @@ func LoadServersFromFile(path string, logger *zap.SugaredLogger) ([]*server.Serv
 		}
 		serverPools = append(serverPools, pool)
 	}
-
-	return serverPools, nil
+	return serverPools
 }
 
-func (ServerConfig) newServerFromConfig(cfg ServerConfig) *server.Server {
+func (serverConfig) newServerFromConfig(cfg serverConfig) *server.Server {
 	return &server.Server{
 		ID:              cfg.ID,
 		Name:            cfg.Name,

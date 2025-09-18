@@ -1,11 +1,11 @@
 meta {
-  name: Healthcheck
+  name: Get all server pools
   type: http
   seq: 1
 }
 
 get {
-  url: http://localhost:2137/healthcheck
+  url: http://localhost:3001/admin/serverPools
   body: none
   auth: inherit
 }

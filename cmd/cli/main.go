@@ -1,17 +1,22 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"context"
+	"errors"
+	"github.com/MateuszW99/GoBalancer/internal/app"
 	"github.com/MateuszW99/GoBalancer/internal/config"
-	"github.com/MateuszW99/GoBalancer/internal/server"
-	"github.com/MateuszW99/GoBalancer/internal/strategy"
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatalf("failed to init logger: %v", err)
@@ -21,41 +26,20 @@ func main() {
 	}()
 	sugar := logger.Sugar()
 
-	port := flag.Int("port", 3000, "Port to listen on")
-	serverConfig := flag.String("server-config", "servers.json", "Servers to which traffic will be distributed")
-	flag.Parse()
-
-	serverPools, err := config.LoadServersFromFile(*serverConfig, sugar)
+	appCfg, err := config.Load(sugar)
 	if err != nil {
-		sugar.Fatalf("failed to load server config: %v", err)
-	}
-	if len(serverPools) == 0 {
-		sugar.Fatalf("no servers found in %v", *serverConfig)
+		sugar.Fatalw("failed to build app config", "err", err)
 	}
 
-	pool := serverPools[0] // TODO: run all pools concurrently
-	loadBalancer, err := strategy.SelectLoadBalancerWithStrategy(strategy.ParseStrategyType(pool.Strategy), pool, sugar)
+	application, err := app.NewApp(
+		app.WithConfig(appCfg),
+		app.WithLogger(sugar),
+	)
 	if err != nil {
-		sugar.Fatalw("failed to select strategy", "error", err)
-	}
-	server.StartHealthChecking(pool, server.DefaultHealthCheckConfig, sugar)
-	distributeLoad(*port, loadBalancer, sugar)
-
-	select {}
-}
-
-func distributeLoad(port int, loadBalancer *strategy.LoadBalancer, logger *zap.SugaredLogger) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", loadBalancer.Serve)
-
-	trafficDistributor := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
+		sugar.Fatalw("failed to build app", "err", err)
 	}
 
-	logger.Info("starting load balancer on port", "port", port)
-
-	if err := trafficDistributor.ListenAndServe(); err != nil {
-		logger.Fatalw("load balancer failed", "port", port, "err", err)
+	if err := application.Run(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		sugar.Fatalw("app run failed", "err", err)
 	}
 }
